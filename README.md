@@ -62,6 +62,8 @@ wal_level = replica
 archive_mode = on
 archive_command = 'test ! -f /mnt/server/wals/%f && cp %p /mnt/server/wals/%f'
 restore_command = 'cp /mnt/server/wals/%f %p'
+#recovery_target_time = ''
+#recovery_target_action = ''
 ```
 
 ## Ejecución
@@ -129,21 +131,14 @@ touch recovery.signal
 
 
 ## Datos de prueba
-_Insertamos datos en la tabla creada anteriormente, para ello nos conectamos a la base de datos dellstore._
+_Eliminamos la tabla `cust_hist` simulando que se cometió un fallo importante_
 ```
-INSERT INTO id_prueba(id,texto) values (1,'Datos Valiosos');
+DROP TABLE cust_hist;
 ```
-#### Forzamos que se guarde el archivo wal actual
+#### Forzamos que se guarde el archivo wal actual para confirmar los cambios actuales
 ```
 SELECT pg_switch_wal();
 ```
-## Restauración total
-Se necesita comentar la siguiente línea dentro del archivo postgresql.conf:
-```
-#time_target_recovery = 'formatofecha'
-```
-
-
 ## Restauración a un punto en el tiempo
 Necesitamos saber el tiempo actual o el tiempo al que queremos volver
 ```
@@ -156,15 +151,26 @@ Necesitamos saber el tiempo actual o el tiempo al que queremos volver
 Modificar el postgresql.conf del pitr-copy para que se restaure a una hora dada.    
 Se necesita descomentar la siguiente línea dentro del archivo postgresql.conf:
 ```
-time_target_recovery = '2025-11-16 21:27:01.444901+00'
-```
-Podemos agregar más datos en la tabla, para ello nos conectamos a la base de datos dellstore:
-```
-INSERT INTO id_prueba(id,texto) values (2,'Datos Inútiles');
+recovery_target_time = '2025-11-20 14:52:09.150065+00'
 ```
 > Estos datos no serán restaurados
+
+## Restauración total
+Se necesita comentar la siguiente línea dentro del archivo postgresql.conf:
+```
+#recovery_target_time = '2025-11-20 14:52:09.150065+00'
+```
+
+## Activacion de la copia
+Para que la base de datos no se mantenga en solo lectura en caso de hacer una restauracion
+en un punto del tiempo descomentamos la siguiente configuracion:
+```
+#recovery_target_action  = 'formatofecha'
+```
+
 ## Levantar el servidor copia
-El nodo copia se va a levantar en modo recuperación utilizando como checkpoint el full backup y ejecutando sobre este los wals hasta un determinado punto en el tiempo o en su totalidad.
+El nodo copia se va a levantar en modo recuperación utilizando como checkpoint el full backup y
+ejecutando sobre este los wals hasta un determinado punto en el tiempo o en su totalidad.
 
 
 **Nos posicionamos sobre la carpeta pitr-copy y ejecutamos:**
