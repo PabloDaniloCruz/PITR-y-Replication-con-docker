@@ -45,9 +45,6 @@ Por defecto, los archivos WAL (segmentos de 16MB) se reciclan o eliminan una vez
 En el archivo `postgresql.conf` del nodo principal debemos definir las siguientes directivas:
 
 ```
-# Define el directorio para el almacenado de la BD
-data_directory = '/data'
-
 # Habilita nivel de réplica y archivado de wals
 wal_level = replica
 archive_mode = on
